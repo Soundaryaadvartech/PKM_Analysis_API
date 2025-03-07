@@ -1,5 +1,6 @@
 import traceback
 import json
+from typing import Optional
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from sqlalchemy import distinct
@@ -11,9 +12,11 @@ from database.models import Item
 router = APIRouter()
 
 @router.get("/inventory_summary")
-def inventory_summary(days: int, db:Session = Depends(get_db)):
+def inventory_summary(days: Optional[int] = None, days_to_predict: Optional[int] = None, db:Session = Depends(get_db)):
     try:
-        summary_df = generate_inventory_summary(db, days)
+        days = days or 60
+        days_to_predict = days_to_predict or 30
+        summary_df = generate_inventory_summary(db, days, days_to_predict)
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,
@@ -39,21 +42,12 @@ def unique_values(db: Session = Depends(get_db)):
             "__Batch": [row[0] for row in db.query(distinct(Item.batch)).all() if row[0] is not None],
             "Fabric": [row[0] for row in db.query(distinct(Item.Fabric)).all() if row[0] is not None],
             "Fit" : [row[0] for row in db.query(distinct(Item.Fit)).all() if row[0] is not None],
-            "Lining": [row[0] for row in db.query(distinct(Item.Lining)).all() if row[0] is not None],
             "Neck" : [row[0] for row in db.query(distinct(Item.Neck)).all() if row[0] is not None],
             "Occasion": [row[0] for row in db.query(distinct(Item.Occasion)).all() if row[0] is not None],
             "Print": [row[0] for row in db.query(distinct(Item.Print)).all() if row[0] is not None],
-            "Product_Availability": [row[0] for row in db.query(distinct(Item.Product_Availability)).all() if row[0] is not None],
             "Size" : [row[0] for row in db.query(distinct(Item.Size)).all() if row[0] is not None],
             "Sleeve": [row[0] for row in db.query(distinct(Item.Sleeve)).all() if row[0] is not None],
-            "Bottom_Length": [row[0] for row in db.query(distinct(Item.bottom_length)).all() if row[0] is not None],
-            "Bottom_Print": [row[0] for row in db.query(distinct(Item.bottom_print)).all() if row[0] is not None],
-            "Bottom_Type": [row[0] for row in db.query(distinct(Item.bottom_type)).all() if row[0] is not None],
-            "Collections": [row[0] for row in db.query(distinct(Item.collections)).all() if row[0] is not None],
-            "Details": [row[0] for row in db.query(distinct(Item.details)).all() if row[0] is not None],
-            "Pocket": [row[0] for row in db.query(distinct(Item.pocket)).all() if row[0] is not None],
-            "Top_Length": [row[0] for row in db.query(distinct(Item.top_length)).all() if row[0] is not None],
-            "Waist_Band": [row[0] for row in db.query(distinct(Item.waistband)).all() if row[0] is not None],
+            "Mood" : [row[0] for row in db.query(distinct(Item.mood)).all() if row[0] is not None]
         }
         
         return JSONResponse(
